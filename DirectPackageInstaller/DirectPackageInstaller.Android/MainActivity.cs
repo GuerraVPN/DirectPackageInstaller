@@ -267,7 +267,7 @@ public async Task StartActivityAndWait(Intent? Activity)
             }
         }
 
-        public static void LogFatalError(Exception ex)
+        public static void LogFatalError(System.Exception ex)
         {
             try
             {
