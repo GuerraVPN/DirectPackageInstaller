@@ -70,6 +70,43 @@ jobs:
           git submodule status
           ./Build.cmd
 
+      - name: Sign Android APK
+        run: |
+          set -euo pipefail
+          APK_SIGNER="$(find "$ANDROID_SDK_ROOT/build-tools" -type f -name apksigner -print | sort -V | tail -1)"
+          if [ -z "$APK_SIGNER" ]; then
+            echo "apksigner not found"
+            find "$ANDROID_SDK_ROOT/build-tools" -maxdepth 2 -type f -print || true
+            exit 1
+          fi
+          KEYSTORE="$RUNNER_TEMP/dpi-debug.keystore"
+          keytool -genkeypair \
+            -keystore "$KEYSTORE" \
+            -storepass android \
+            -keypass android \
+            -alias androiddebugkey \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -dname "CN=Android Debug,O=Android,C=US" \
+            -noprompt
+          mapfile -t APKS < <(find Release -type f -name '*.apk' -print)
+          if [ "${#APKS[@]}" -eq 0 ]; then
+            echo "No APK found in Release"
+            exit 1
+          fi
+          for APK in "${APKS[@]}"; do
+            "$APK_SIGNER" sign \
+              --ks "$KEYSTORE" \
+              --ks-pass pass:android \
+              --key-pass pass:android \
+              --ks-key-alias androiddebugkey \
+              --out "$APK.signed" \
+              "$APK"
+            mv "$APK.signed" "$APK"
+            "$APK_SIGNER" verify --verbose "$APK"
+          done
+
       - name: List release files
         run: |
           set -euo pipefail
