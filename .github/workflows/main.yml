@@ -1,102 +1,61 @@
-name: Build the DPI
-# Android 15 build trigger
+name: Build the DPI Android
 
 on:
-  push:
-    branches: [ DN8, android15-fix-build ]
-  pull_request:
-    branches: [ DN8 ]
   workflow_dispatch:
+  push:
+    branches:
+      - DN8
+
+permissions:
+  contents: read
 
 jobs:
-  build-nonmac:
-    name: Build Windows / Linux / Android
+  build-android:
+    name: Build Android APK
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
+          submodules: recursive
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
           java-version: '17'
-          distribution: 'temurin'
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install NDK
+      - name: Install Android NDK
         run: sdkmanager "ndk;24.0.8215888"
 
-      - uses: actions/setup-dotnet@v2
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
-      - name: Building
+      - name: Install Android workload
+        run: dotnet workload install android
+
+      - name: Build Android
         env:
-          BUILD_TARGETS: win,linux,android
+          BUILD_TARGETS: android
         run: |
-          git submodule init
-          git submodule update
-          dotnet workload install android
           export ANDROID_SDK_ROOT=/usr/local/lib/android/sdk
-          sh Build.cmd
+          chmod +x Build.cmd
+          ./Build.cmd
 
-      - name: Archive production artifacts
+      - name: List release files
+        run: |
+          echo "=== Release ==="
+          find Release -maxdepth 3 -type f -print 2>/dev/null || true
+
+      - name: Upload Android build
         uses: actions/upload-artifact@v4
         with:
-          name: Releases-nonmac
-          path: |
-            Release
-
-  build-mac:
-    name: Build macOS (signed)
-    runs-on: macos-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-dotnet@v2
-        with:
-          dotnet-version: '8.0.x'
-
-      - name: Building
-        env:
-          BUILD_TARGETS: osx
-        run: |
-          git submodule init
-          git submodule update
-          sh Build.cmd
-
-      - name: Verify ad-hoc signature on arm64 .app
-        run: |
-          mkdir -p Release/verify
-          unzip -q Release/OSX-ARM64-APP.zip -d Release/verify
-          codesign -dvvv Release/verify/DirectPackageInstaller.app 2>&1 | tee /tmp/codesign.txt
-          grep -q "Signature=adhoc" /tmp/codesign.txt || { echo "FAIL: arm64 .app missing ad-hoc signature"; exit 1; }
-          rm -rf Release/verify
-
-      - name: Archive production artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: Releases-mac
-          path: |
-            Release
-
-  collect:
-    name: Collect all artifacts
-    needs: [build-nonmac, build-mac]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: Releases-nonmac
+          name: DirectPackageInstaller-Android15
           path: Release
-      - uses: actions/download-artifact@v4
-        with:
-          name: Releases-mac
-          path: Release
-      - uses: actions/upload-artifact@v4
-        with:
-          name: Releases
-          path: Release
+          if-no-files-found: error
