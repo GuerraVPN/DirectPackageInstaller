@@ -116,9 +116,10 @@ AndroidPublish (){
    
    dotnet workload restore
    
-   Publish $1
-   
-   rm Release/$1.zip
+   echo "Building Android project directly for $1"
+   dotnet restore DirectPackageInstaller/DirectPackageInstaller.Android/DirectPackageInstaller.Android.csproj -r $1
+   dotnet publish DirectPackageInstaller/DirectPackageInstaller.Android/DirectPackageInstaller.Android.csproj -c Release -f net8.0-android -r $1 --no-restore
+   rm -f Release/$1.zip
    APK="DirectPackageInstaller/DirectPackageInstaller.Android/bin/Release/net8.0-android/$1/publish/com.marcussacana.DirectPackageInstaller.apk"
    if [ ! -f "$APK" ]; then
       echo "ERROR: Android APK not produced: $APK"
