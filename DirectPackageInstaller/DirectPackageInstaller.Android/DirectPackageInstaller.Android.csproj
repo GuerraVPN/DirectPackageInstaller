@@ -3,6 +3,7 @@
 		<OutputType>Exe</OutputType>
 		<TargetFramework>net8.0-android</TargetFramework>
 		<SupportedOSPlatformVersion>23</SupportedOSPlatformVersion>
+		<TargetSdkVersion>35</TargetSdkVersion>
 		<Nullable>enable</Nullable>
 		<ApplicationId>com.marcussacana.DirectPackageInstaller</ApplicationId>
 		<ApplicationVersion>1</ApplicationVersion>

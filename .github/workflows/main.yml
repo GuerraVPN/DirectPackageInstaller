@@ -2,7 +2,7 @@ name: Build the DPI
 
 on:
   push:
-    branches: [ DN8 ]
+    branches: [ DN8, android15-fix-build ]
   pull_request:
     branches: [ DN8 ]
   workflow_dispatch:
