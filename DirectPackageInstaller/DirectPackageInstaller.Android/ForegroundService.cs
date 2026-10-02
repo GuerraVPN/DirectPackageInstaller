@@ -101,11 +101,11 @@ public class ForegroundService : Service
                 var pendingIntent = PendingIntent.GetBroadcast(this, 0, Intent, Flags);
                 
                 var notificationBuilder = new Notification.Builder(this, "ServiceChannel")
-                    .SetSmallIcon(Android.Resource.Drawable.SymDefAppIcon)
+                    .SetSmallIcon(Resource.Drawable.ic_stat_service)
                     .SetContentTitle("DirectPackageInstaller")
                     .SetContentText("Serviço ativo")
                     .SetOngoing(true)
-                    .SetCategory(Android.App.Notification.CategoryService)
+                    .SetCategory(global::Android.App.Notification.CategoryService)
                     .SetContentIntent(pendingIntent);
 
                 if (Build.VERSION.SdkInt >= BuildVersionCodes.Q)
