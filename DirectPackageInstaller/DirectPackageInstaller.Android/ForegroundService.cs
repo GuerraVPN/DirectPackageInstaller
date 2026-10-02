@@ -8,7 +8,7 @@ using ForegroundServiceType = Android.Content.PM.ForegroundService;
 
 namespace DirectPackageInstaller.Android;
 
-[Service(ForegroundServiceType = ForegroundServiceType.TypeDataSync)]
+[Service(Exported = false, ForegroundServiceType = ForegroundServiceType.TypeDataSync)]
 public class ForegroundService : Service
 {
     private static Dictionary<string, Action> IntentActionMap = new();
@@ -20,11 +20,9 @@ public class ForegroundService : Service
     private NotificationChannel _channel;
     
     public override void OnCreate()
-    {        
-        BindChannel();
-        BindForeground();
-        
+    {
         base.OnCreate();
+        BindChannel();
     }
 
     public override void OnDestroy()
@@ -102,20 +100,32 @@ public class ForegroundService : Service
                 PendingIntentFlags Flags = Build.VERSION.SdkInt >= BuildVersionCodes.S ? PendingIntentFlags.Immutable : 0;
                 var pendingIntent = PendingIntent.GetBroadcast(this, 0, Intent, Flags);
                 
-                var Notification = new Notification.Builder(this, "ServiceChannel");
-                Notification.SetContentIntent(pendingIntent);
-                Notification.SetContentText("A thread is running.");
+                var Notification = new Notification.Builder(this, "ServiceChannel")
+                    .SetSmallIcon(Resource.Drawable.icon)
+                    .SetContentTitle("DirectPackageInstaller")
+                    .SetContentText("Serviço ativo")
+                    .SetOngoing(true)
+                    .SetCategory(Notification.CategoryService)
+                    .SetContentIntent(pendingIntent);
 
-                if (Build.VERSION.SdkInt < BuildVersionCodes.Tiramisu)
-                    StartForeground(NotificationID, Notification.Build());
-                else
+                if (Build.VERSION.SdkInt >= BuildVersionCodes.Q)
                     StartForeground(NotificationID, Notification.Build(), ForegroundServiceType.TypeDataSync);
+                else
+                    StartForeground(NotificationID, Notification.Build());
             }
             catch (Exception ex)
             {
                 MainActivity.LogFatalError(ex);
             }
         }
+    }
+
+    public override void OnTimeout(int startId, int fgsType)
+    {
+        MainActivity.LogFatalError(new System.InvalidOperationException(
+            $"ForegroundService dataSync timeout. startId={startId}, fgsType={fgsType}"));
+        StopSelf(startId);
+        base.OnTimeout(startId, fgsType);
     }
 
     private void UnbindForeground()
@@ -133,7 +143,7 @@ public class ForegroundService : Service
     }
     
 }   
-[BroadcastReceiver]
+[BroadcastReceiver(Exported = false)]
 public class NotificationReceiver : BroadcastReceiver
 {
     public override void OnReceive(Context? context, Intent? intent)
