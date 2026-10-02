@@ -42,33 +42,13 @@ namespace DirectPackageInstaller.Android
                 .UseReactiveUI();
         }
         
-        protected override async void OnCreate(Bundle savedInstanceState)
+        protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
 
             if (Instances++ == 0)
             {
-
-                List<string> Permissions = new () {
-                    Manifest.Permission.ReadExternalStorage,
-                    Manifest.Permission.WriteExternalStorage,
-                    Manifest.Permission.ManageExternalStorage
-                };
-
-
-                if (Build.VERSION.SdkInt >= BuildVersionCodes.Tiramisu)
-                {
-                    Permissions.Add(Manifest.Permission.PostNotifications);
-                }
-
-                var MissingPermissions = Permissions.Where(x => CheckSelfPermission(x) != Permission.Granted);
-
-                if (MissingPermissions.Any())
-                    RequestPermissions(MissingPermissions.ToArray(), 1);
-
-                await IgnoreBatteryOptimizations();
-
-                App.InstallApk = (Path) =>
+App.InstallApk = (Path) =>
                 {
                     var Install = new Intent(Intent.ActionView);
                     var ApkFile = FileProvider.GetUriForFile(Application.Context, "com.marcussacana.DirectPackageInstaller.provider", new File(Path));
@@ -219,14 +199,7 @@ namespace DirectPackageInstaller.Android
             if (Tasks.ContainsKey(requestCode))
                 Tasks[requestCode].SetResult();
         }
-
-        protected override async void OnPause()
-        {
-            base.OnPause();
-            await IgnoreBatteryOptimizations();
-        }
-
-        public async Task StartActivityAndWait(Intent? Activity)
+public async Task StartActivityAndWait(Intent? Activity)
         {
             TaskCompletionSource Source = new TaskCompletionSource();
             int ID = Tasks.Count;
