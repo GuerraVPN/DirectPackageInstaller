@@ -31,11 +31,23 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - name: Prepare Android SDK
+      - name: Locate Android SDK tools
         run: |
           set -euo pipefail
-          echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          SDKMANAGER="$(find "$ANDROID_SDK_ROOT" -type f -name sdkmanager -print -quit)"
+          if [ -z "$SDKMANAGER" ]; then
+            echo "sdkmanager not found; Android SDK layout:"
+            find "$ANDROID_SDK_ROOT" -maxdepth 4 -type f | head -100 || true
+            exit 1
+          fi
+          SDKMANAGER_DIR="$(dirname "$SDKMANAGER")"
+          echo "$SDKMANAGER_DIR" >> "$GITHUB_PATH"
           echo "$ANDROID_SDK_ROOT/platform-tools" >> "$GITHUB_PATH"
+          echo "SDKMANAGER=$SDKMANAGER"
+
+      - name: Install Android SDK components
+        run: |
+          set -euo pipefail
           sdkmanager --licenses < /dev/null || true
           sdkmanager "platform-tools" "ndk;24.0.8215888"
 
@@ -61,7 +73,7 @@ jobs:
       - name: List release files
         run: |
           set -euo pipefail
-          find Release -maxdepth 3 -type f -print
+          find Release -maxdepth 4 -type f -print
           find Release -type f -name '*.apk' -print
 
       - name: Upload Android build
