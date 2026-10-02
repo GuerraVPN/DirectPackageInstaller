@@ -119,8 +119,13 @@ AndroidPublish (){
    Publish $1
    
    rm Release/$1.zip
-   rm DirectPackageInstaller/DirectPackageInstaller.Android/bin/Release/net8.0-android/$1/publish/com.marcussacana.DirectPackageInstaller.apk
-   zip -j -9 -r Release/$1.zip DirectPackageInstaller/DirectPackageInstaller.Android/bin/Release/net8.0-android/$1/publish/*.apk
+   APK="DirectPackageInstaller/DirectPackageInstaller.Android/bin/Release/net8.0-android/$1/publish/com.marcussacana.DirectPackageInstaller.apk"
+   if [ ! -f "$APK" ]; then
+      echo "ERROR: Android APK not produced: $APK"
+      find DirectPackageInstaller/DirectPackageInstaller.Android/bin/Release/net8.0-android -type f -name '*.apk' -print || true
+      return 1
+   fi
+   zip -j -9 -r Release/$1.zip "$APK"
 }
 
 if has_target win; then
