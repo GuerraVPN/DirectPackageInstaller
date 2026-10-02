@@ -100,18 +100,18 @@ public class ForegroundService : Service
                 PendingIntentFlags Flags = Build.VERSION.SdkInt >= BuildVersionCodes.S ? PendingIntentFlags.Immutable : 0;
                 var pendingIntent = PendingIntent.GetBroadcast(this, 0, Intent, Flags);
                 
-                var Notification = new Notification.Builder(this, "ServiceChannel")
-                    .SetSmallIcon(Resource.Drawable.icon)
+                var notificationBuilder = new Notification.Builder(this, "ServiceChannel")
+                    .SetSmallIcon(Android.Resource.Drawable.SymDefAppIcon)
                     .SetContentTitle("DirectPackageInstaller")
                     .SetContentText("Serviço ativo")
                     .SetOngoing(true)
-                    .SetCategory(Notification.CategoryService)
+                    .SetCategory(Android.App.Notification.CategoryService)
                     .SetContentIntent(pendingIntent);
 
                 if (Build.VERSION.SdkInt >= BuildVersionCodes.Q)
-                    StartForeground(NotificationID, Notification.Build(), ForegroundServiceType.TypeDataSync);
+                    StartForeground(NotificationID, notificationBuilder.Build(), ForegroundServiceType.TypeDataSync);
                 else
-                    StartForeground(NotificationID, Notification.Build());
+                    StartForeground(NotificationID, notificationBuilder.Build());
             }
             catch (Exception ex)
             {
