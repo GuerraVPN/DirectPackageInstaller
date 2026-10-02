@@ -120,14 +120,6 @@ public class ForegroundService : Service
         }
     }
 
-    public override void OnTimeout(int startId, int fgsType)
-    {
-        MainActivity.LogFatalError(new System.InvalidOperationException(
-            $"ForegroundService dataSync timeout. startId={startId}, fgsType={fgsType}"));
-        StopSelf(startId);
-        base.OnTimeout(startId, fgsType);
-    }
-
     private void UnbindForeground()
     {
         if (Build.VERSION.SdkInt >= BuildVersionCodes.O)
