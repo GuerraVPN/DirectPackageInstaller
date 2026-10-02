@@ -24,6 +24,8 @@ using AndroidX.Core.App;
 using DynamicData;
 
 [assembly: Application(UsesCleartextTraffic = true)]
+[assembly: UsesPermission(Android.Manifest.Permission.ForegroundService)]
+[assembly: UsesPermission(Name = "android.permission.FOREGROUND_SERVICE_DATA_SYNC")]
 
 namespace DirectPackageInstaller.Android
 {
@@ -111,7 +113,14 @@ App.InstallApk = (Path) =>
                 };
 
 
-                ForegroundService.StartService(this, null);
+                try
+                {
+                    ForegroundService.StartService(this, null);
+                }
+                catch (System.Exception ex)
+                {
+                    LogFatalError(ex);
+                }
             }
         }
 
